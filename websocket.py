@@ -5,36 +5,35 @@ import asyncio
 import websockets
 
 chatlog = ""
-open_sockets = set()  # some id to something that can make some asyncio happen
-chatlog_max_size = 50
-
-async def echo(socket):
-    async for message in socket:
-        await socket.send(message)
+open_sockets = set()
+chatlog_max_size = 1000
 
 
 async def main():
-    async with websockets.serve(echo, "localhost", 6789):
-        await asyncio.Future()  # run forever
-
-
-async def main2():
     async with websockets.serve(on_connection, "localhost", 6789):
+        print("Serving.")
         await asyncio.Future()  # run forever
 
 
 async def on_connection(socket):
     global chatlog, open_sockets, chatlog_max_size
-    socket.send(chatlog)
+    print(f"Connection {socket}")
+    await socket.send(chatlog)
     open_sockets.add(socket)
     try:
         async for message in socket:
+            print(f"Message. {message}")
             chatlog += message
             if chatlog_max_size < len(chatlog):
                 chatlog = chatlog[-chatlog_max_size//2:]
             websockets.broadcast(open_sockets, chatlog)
+    except Exception as e:
+        print(e)
     finally:
+        print(f"Closed socket {socket}")
         open_sockets.remove(socket)
 
-
-asyncio.run(main())
+try:
+    asyncio.run(main())
+except KeyboardInterrupt:
+        print("Quit because of KeyboardInterrupt.")
