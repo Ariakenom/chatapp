@@ -3,6 +3,8 @@
 
 import asyncio
 import websockets
+import signal
+import os
 
 chatlog = ""
 open_sockets = set()
@@ -10,9 +12,14 @@ chatlog_max_size = 1000
 
 
 async def main():
-    async with websockets.serve(on_connection, "localhost", 6789):
+    loop = asyncio.get_running_loop()
+    stop = loop.create_future()
+    loop.add_signal_handler(signal.SIGTERM, stop.set_result, None)
+    host = "localhost"
+    port = int(os.environ.get("PORT", "8001"))
+    async with websockets.serve(on_connection, host, port):
         print("Serving.")
-        await asyncio.Future()  # run forever
+        await stop
 
 
 async def on_connection(socket):

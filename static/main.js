@@ -1,7 +1,11 @@
 window.addEventListener("DOMContentLoaded", () => {
     let chatlog = "";
     const chatbox = document.getElementById('chatbox');
-    const websocket = new WebSocket("ws://localhost:6789/");
+    let host = "localhost"; 
+    if (window.location.host !== "") {
+        host = window.location.host;
+    }
+    const websocket = new WebSocket(`ws://${host}:8001/`);
 
     chatbox.addEventListener('input', async event => {
         let changes = "";
