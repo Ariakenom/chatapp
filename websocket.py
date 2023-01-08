@@ -5,6 +5,8 @@ import asyncio
 import websockets
 import signal
 import os
+import json
+
 
 chatlog = ""
 open_sockets = set()
@@ -24,16 +26,21 @@ async def main():
 
 async def on_connection(socket):
     global chatlog, open_sockets, chatlog_max_size
+    chatcounter = 0  # counts characters from client that are in the chatlog
     print(f"Connection {socket}")
+    print(f"Number of connections: {len(open_sockets)}")
     await socket.send(chatlog)
     open_sockets.add(socket)
     try:
         async for message in socket:
-            print(f"Message. {message}")
+            print(f"Message from: {socket}")
+            print(f"Message contains: {message!r}")
+            chatcounter += len(message)
             chatlog += message
             if chatlog_max_size < len(chatlog):
                 chatlog = chatlog[-chatlog_max_size//2:]
-            websockets.broadcast(open_sockets, chatlog)
+            asyncio.create_task(websocket.send(json.dumps({"chatcounter": chatcounter})))  # notify the client that it's changes are included
+            websockets.broadcast(open_sockets, json.dumps({"chatlog": chatlog}))
     except Exception as e:
         print(e)
     finally:
@@ -44,3 +51,9 @@ try:
     asyncio.run(main())
 except KeyboardInterrupt:
         print("Quit because of KeyboardInterrupt.")
+
+"""
+Improvement:
+    when sending chatlog, include how much of the users input is in it
+    that way, when the users gets the chatlog, it can see if anything has been typed that isnt in the chatlog
+"""

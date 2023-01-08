@@ -1,5 +1,7 @@
 window.addEventListener("DOMContentLoaded", () => {
-    let chatlog = "";
+    let server_chatlog = "";
+    let client_chatcounter = 0;
+    let server_chatcounter = 0;
     const chatbox = document.getElementById('chatbox');
     let host = "localhost"; 
     if (window.location.host !== "") {
@@ -11,13 +13,13 @@ window.addEventListener("DOMContentLoaded", () => {
         let changes = "";
         function undoChanges() {
             chatbox.selectionStart = chatbox.value.length;
-            chatbox.value = chatlog;
+            chatbox.value = server_chatlog;
         };
         isInsert = type => ["insertText",  "insertCompositionText"].includes(type) || type.startsWith("insertFrom");
         // Adding in the middle is too hard
         if (chatbox.selectionStart !== chatbox.value.length) {
             undoChanges();
-        } else if (isInsert(event.inputType)) {
+        } else if (isInsert(event.inputType) && event.data !== null) {  // chrome sometimes has event.data=null here ???
             changes += event.data;
         } else if (event.inputType === "insertLineBreak") {
             changes += "\n";
@@ -28,13 +30,35 @@ window.addEventListener("DOMContentLoaded", () => {
         }
         
         if (changes) {
+            client_chatcounter += changes.length
             websocket.send(changes);
         }
     })
   
     websocket.onmessage = ({ data }) => {
-        chatlog = data;
-        chatbox.value = chatlog;
+        if ("chatcounter" in data) {
+            server_chatcounter = data["chatcounter"]
+        }
+        if ("chatlog" in data){
+            server_chatlog = data;
+            if (client_chatcounter === server_chatcounter){
+                chatbox.value = server_chatlog;
+                chatbox.selectionStart = chatbox.value.length;
+            }
+        }
     };
-  
+
+    websocket.onclose = (event) => {
+        console.log("onclose");
+        console.log(event);
+        chatbox.disabled = true;
+        chatbox.value += "\n:(\nerror\ndetails in console";
+    }
+
+    socket.onerror = (event) => {
+        console.log("onclose");
+        console.log(event);
+        chatbox.disabled = true;
+        chatbox.value += "\n:(\nerror\ndetails in console";
+      };
 });
