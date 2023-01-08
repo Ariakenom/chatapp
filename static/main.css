@@ -11,4 +11,5 @@ html
     width:20rem;
     font-size:1rem;
     resize: none;
+    overflow: hidden;
 }
