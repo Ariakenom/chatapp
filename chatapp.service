@@ -1,0 +1,16 @@
+# /lib/systemd/system/chatapp.service
+[Unit]
+Description=Chatapp websocket server
+After=network.target
+[Service]
+Type=simple
+Restart=on-failure
+RestartSec=5
+User=patan
+Group=patan
+WorkingDirectory=/home/patan/chatapp
+Environment=PATH=/home/patan/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin
+ExecStartPre=git pull
+ExecStart=bash -c /home/patan/chatapp/websocket.py
+[Install]
+WantedBy=multi-user.target
