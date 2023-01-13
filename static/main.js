@@ -75,6 +75,12 @@ window.addEventListener("DOMContentLoaded", () => {
     chatbox.onfocus = (event) => {
         chatbox.setSelectionRange(chatbox.value.length, chatbox.value.length);
     };
+
+    // using height relative to viewport seems broken in css, but we can set it in js 
+    document.body.style.height = window.innerHeight*1 + "px";
+    window.onresize = (event) => {
+        document.body.style.height = window.innerHeight*1 + "px";
+    };
 });
 
 // Chrome: The focus event fires before the cursor is placed,
